@@ -40,34 +40,40 @@ const WhiteList = () => {
                 setLoading(true)
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
                 const wallet_add = await provider.send("eth_requestAccounts", []);
-                const signer = provider.getSigner();
-                const contract = new ethers.Contract(contractAddress, ABI, signer);
                 (owner.toLowerCase() === wallet_add[0].toLowerCase()) ? setAdminFlag(true) : setAdminFlag(false)
-                const whiteList = [];
-                const len_whitelist = parseInt(await contract.getTotalWhitelist());
+                // const signer = provider.getSigner();
+                // const contract = new ethers.Contract(contractAddress, ABI, signer);
+                // const whiteList = [];
+                // const len_whitelist = parseInt(await contract.getTotalWhitelist());
 
-                for (let i = 0; i < len_whitelist; i++) {
-                    const tokenContractAddress = await contract.WhiteListTokens(i)
-                    let Tokencontract = null;
-                    try {
-                        if (provider.provider.networkVersion == 80001)
-                            Tokencontract = await fetch(`https://api-testnet.polygonscan.com/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=6Z536YUCYRCIDW1CR53QAS1PYZ41X2FA7K`)
-                        else if (provider.provider.networkVersion == 11155111)
-                            Tokencontract = await fetch(`https://api-sepolia.etherscan.io/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=WSG13CQU7C9GAHQIRH3J51BPRDYDSC835B`)
-                        const respo = await Tokencontract.json()
-                        const Tcontract = new ethers.Contract(tokenContractAddress, respo.result, signer);
-                        const name = await Tcontract.name()
-                        const symbol = await Tcontract.symbol()
-                        whiteList.push({ C_address: tokenContractAddress, C_name: `${name} (${symbol})` });
-                    }
-                    catch (e) {
-                        const name = 'not found'
-                        const symbol = 'E'
-                        whiteList.push({ C_address: tokenContractAddress, C_name: `${name} (${symbol})` });
+                // for (let i = 0; i < len_whitelist; i++) {
+                //     const tokenContractAddress = await contract.WhiteListTokens(i)
+                //     let Tokencontract = null;
+                //     try {
+                //         if (provider.provider.networkVersion == 80001)
+                //             Tokencontract = await fetch(`https://api-testnet.polygonscan.com/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=6Z536YUCYRCIDW1CR53QAS1PYZ41X2FA7K`)
+                //         else if (provider.provider.networkVersion == 11155111)
+                //             Tokencontract = await fetch(`https://api-sepolia.etherscan.io/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=WSG13CQU7C9GAHQIRH3J51BPRDYDSC835B`)
+                //         const respo = await Tokencontract.json()
+                //         const Tcontract = new ethers.Contract(tokenContractAddress, respo.result, signer);
+                //         const name = await Tcontract.name()
+                //         const symbol = await Tcontract.symbol()
+                //         whiteList.push({ C_address: tokenContractAddress, C_name: `${name} (${symbol})` });
+                //     }
+                //     catch (e) {
+                //         const name = 'not found'
+                //         const symbol = 'E'
+                //         whiteList.push({ C_address: tokenContractAddress, C_name: `${name} (${symbol})` });
 
-                    }
-                }
-
+                //     }
+                // }
+                //get data from database
+                const fetchWhitelist = await fetch("http://localhost:3000/whitelist", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+                    body: JSON.stringify({ networkId: "80001" })
+                })
+                const whiteList = await fetchWhitelist.json()
                 setData(whiteList)
                 setLoading(false)
             }
@@ -98,9 +104,40 @@ const WhiteList = () => {
             const signer = provider.getSigner();
             const contract = new ethers.Contract(contractAddress, ABI, signer);
             const tx = await contract.addWhitelist(w_add)
+            let tokenContractAddress = w_add.toLowerCase()
+            let Tokencontract = null;
+            let networkId = provider.provider.networkVersion
+            if (networkId == 80001)
+                Tokencontract = await fetch(`https://api-testnet.polygonscan.com/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=6Z536YUCYRCIDW1CR53QAS1PYZ41X2FA7K`)
+            else if (networkId == 11155111)
+                Tokencontract = await fetch(`https://api-sepolia.etherscan.io/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=WSG13CQU7C9GAHQIRH3J51BPRDYDSC835B`)
+            const respo = await Tokencontract.json()
+            const Tcontract = new ethers.Contract(tokenContractAddress, respo.result, signer);
+            const name = await Tcontract.name()
+            const symbol = await Tcontract.symbol()
+            const decimal = await Tcontract.decimals()
             setLoading2(true)
             await tx.wait()
-            setLoading(false)
+
+            //adding to database
+            try {
+
+                await fetch('http://localhost:3000/addWhitelist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+                    body: JSON.stringify({
+                        tokenAddress: w_add,
+                        tokenName: name,
+                        tokenSymbol: symbol,
+                        networkId: networkId,
+                        decimals: decimal
+                    })
+                })
+            }
+            catch (e) {
+                console.log("api error : ", e);
+            }
+            setLoading2(false)
             toast.success('Transaction successful', {
                 position: "top-center",
                 autoClose: 5000,
@@ -112,6 +149,7 @@ const WhiteList = () => {
                 theme: whitemod_flag ? "light" : "dark",
             })
             setFlag(Flag + 1)
+
         }
         catch (e) {
             ((e.toString()).includes('user rejected transaction'))
@@ -170,15 +208,28 @@ const WhiteList = () => {
         }
     }
     const removeFromWhitelist = async () => {
-        setLoading(true)
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             await provider.send("eth_requestAccounts", []);
             const signer = provider.getSigner();
             const contract = new ethers.Contract(contractAddress, ABI, signer);
             const tx = await contract.removeWhitelist(w_add)
+            setLoading2(true)
             tx.wait()
-            setLoading(false)
+            console.log("beofre API called : ", w_add);
+            try {
+                console.log("inside try block");
+                const fetchremoveWhitelist = await fetch("http://localhost:3000/removeWhitelist", {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+                    body: JSON.stringify({ tokenAddress: w_add, networkId: "80001" })
+                })
+                console.log(await fetchremoveWhitelist.json());
+            }
+            catch (e) {
+                console.log(e);
+            }
+            setLoading2(false)
             setFlag(Flag + 1)
         }
         catch (e) {
@@ -226,8 +277,8 @@ const WhiteList = () => {
                                     return (
                                         <div className={style.vesting_data} key={index}>
                                             <div>{index}</div>
-                                            <div>{e.C_name}</div>
-                                            <div className='col-span-2 '>{e.C_address}</div>
+                                            <div>{e.tokenName}</div>
+                                            <div className='col-span-2 '>{e.tokenAddress}</div>
                                         </div>)
                                 })
                         }

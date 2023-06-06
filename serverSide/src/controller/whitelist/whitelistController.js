@@ -7,11 +7,10 @@ const getWhitelist = async (req, res) => {
         const list = await whitelist.findAll({
             where: { networkId: networkId }
         })
-        console.log("list :", list);
         res.json(list)
     }
     catch (e) {
-        console.log("err");
+        console.log(e);
         res.json(e)
     }
 }
@@ -28,20 +27,25 @@ const addToWhitelist = async (req, res) => {
         res.status(200).json({ message: "Token added to whitelist." })
     }
     catch (e) {
+        console.log(e);
         res.json({ error: e })
     }
 }
 
 const removeFromWhitelist = async (req, res) => {
     try {
+        console.log("delete whitelist controller called");
         const { tokenAddress, networkId } = req.body;
+        console.log(tokenAddress, networkId);
         const list = await whitelist.destroy({
             where: { tokenAddress: tokenAddress, networkId: networkId }
         })
+        console.log(list)
         if (list !== 0)
             res.status(200).json({ message: "Token removed from whitelist." })
     }
     catch (e) {
+        console.log(e);
         res.json(e)
     }
 }
