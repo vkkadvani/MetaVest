@@ -41,27 +41,34 @@ const LockForm = () => {
 
         //dropdown setup data
         async function SetDropdown() {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const wallet_add = await provider.send("eth_requestAccounts", []);
-            const signer = provider.getSigner();
-            const contract = new ethers.Contract(contractAddress, ABI, signer);
-            const whiteList = [];
-            const len_whitelist = parseInt(await contract.getTotalWhitelist());
+            // const provider = new ethers.providers.Web3Provider(window.ethereum);
+            // const wallet_add = await provider.send("eth_requestAccounts", []);
+            // const signer = provider.getSigner();
+            // const contract = new ethers.Contract(contractAddress, ABI, signer);
+            // const whiteList = [];
+            // const len_whitelist = parseInt(await contract.getTotalWhitelist());
 
-            for (let i = 0; i < len_whitelist; i++) {
-                const tokenContractAddress = await contract.WhiteListTokens(i)
-                let Tokencontract = null;
-                if (provider.provider.networkVersion == 80001)
-                    Tokencontract = await fetch(`https://api-testnet.polygonscan.com/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=6Z536YUCYRCIDW1CR53QAS1PYZ41X2FA7K`)
-                else if (provider.provider.networkVersion == 11155111)
-                    Tokencontract = await fetch(`https://api-sepolia.etherscan.io/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=WSG13CQU7C9GAHQIRH3J51BPRDYDSC835B`)
-                const respo = await Tokencontract.json()
-                const Tcontract = new ethers.Contract(tokenContractAddress, respo.result, signer);
-                const name = await Tcontract.name()
-                const symbol = await Tcontract.symbol()
-                whiteList.push({ C_address: tokenContractAddress, C_name: `${name} (${symbol}) - ${tokenContractAddress}` });
-            }
-            setData(whiteList)
+            // for (let i = 0; i < len_whitelist; i++) {
+            //     const tokenContractAddress = await contract.WhiteListTokens(i)
+            //     let Tokencontract = null;
+            //     if (provider.provider.networkVersion == 80001)
+            //         Tokencontract = await fetch(`https://api-testnet.polygonscan.com/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=6Z536YUCYRCIDW1CR53QAS1PYZ41X2FA7K`)
+            //     else if (provider.provider.networkVersion == 11155111)
+            //         Tokencontract = await fetch(`https://api-sepolia.etherscan.io/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=WSG13CQU7C9GAHQIRH3J51BPRDYDSC835B`)
+            //     const respo = await Tokencontract.json()
+            //     const Tcontract = new ethers.Contract(tokenContractAddress, respo.result, signer);
+            //     const name = await Tcontract.name()
+            //     const symbol = await Tcontract.symbol()
+            //     whiteList.push({ C_address: tokenContractAddress, C_name: `${name} (${symbol}) - ${tokenContractAddress}` });
+            // }
+            const fetchWhitelist = await fetch("http://localhost:3000/whitelist", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+                body: JSON.stringify({ networkId: "80001" })
+            })
+            const whiteListData = await fetchWhitelist.json()
+            console.log(whiteListData);
+            setData(whiteListData)
         }
         SetDropdown()
     }, [])
@@ -71,21 +78,21 @@ const LockForm = () => {
         const addressoftoken = form.address_of_token;
         if (validateForm(form)) {
             try {
-                const provider = new ethers.providers.Web3Provider(window.ethereum);
-                const wallet_add = await provider.send("eth_requestAccounts", []);
-                const signer = provider.getSigner();
-                let ABI_Token = null;
+                // const provider = new ethers.providers.Web3Provider(window.ethereum);
+                // const wallet_add = await provider.send("eth_requestAccounts", []);
+                // const signer = provider.getSigner();
+                // let ABI_Token = null;
 
-                if (provider.provider.networkVersion == 80001)
-                    ABI_Token = await fetch(`https://api-testnet.polygonscan.com/api?module=contract&action=getabi&address=${addressoftoken}&apikey=6Z536YUCYRCIDW1CR53QAS1PYZ41X2FA7K`)
-                else if (provider.provider.networkVersion == 11155111)
-                    ABI_Token = await fetch(`https://api-sepolia.etherscan.io/api?module=contract&action=getabi&address=${addressoftoken}&apikey=WSG13CQU7C9GAHQIRH3J51BPRDYDSC835B`)
-                const response = await ABI_Token.json()
-                const Tokencontract = new ethers.Contract(addressoftoken, response.result, signer);
-                const decimalOfToken = await Tokencontract.decimals();
-                const name = await Tokencontract.name();
+                // if (provider.provider.networkVersion == 80001)
+                //     ABI_Token = await fetch(`https://api-testnet.polygonscan.com/api?module=contract&action=getabi&address=${addressoftoken}&apikey=6Z536YUCYRCIDW1CR53QAS1PYZ41X2FA7K`)
+                // else if (provider.provider.networkVersion == 11155111)
+                //     ABI_Token = await fetch(`https://api-sepolia.etherscan.io/api?module=contract&action=getabi&address=${addressoftoken}&apikey=WSG13CQU7C9GAHQIRH3J51BPRDYDSC835B`)
+                // const response = await ABI_Token.json()
+                // const Tokencontract = new ethers.Contract(addressoftoken, response.result, signer);
+                // const decimalOfToken = await Tokencontract.decimals();
+                // const name = await Tokencontract.name();
 
-                setForm({ ...form, decimalOfToken: decimalOfToken, nameOfToken: name })
+                setForm({ ...form, decimalOfToken: whiteListedToken.decimals, nameOfToken: whiteListedToken.tokenName })
                 setPageComponent(true)
             }
             catch (e) {
@@ -170,7 +177,7 @@ const LockForm = () => {
                                                         whiteListedToken.map((e, index) => {
                                                             return (
                                                                 <>
-                                                                    <option value={e.C_address}>{e.C_name}</option>
+                                                                    <option value={e.tokenAddress}>{e.tokenName}</option>
                                                                 </>
                                                             )
                                                         })

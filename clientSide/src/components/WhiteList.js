@@ -104,7 +104,8 @@ const WhiteList = () => {
             const signer = provider.getSigner();
             const contract = new ethers.Contract(contractAddress, ABI, signer);
             const tx = await contract.addWhitelist(w_add)
-            let tokenContractAddress = w_add.toLowerCase()
+            let tokenContractAddress = w_add
+            console.log(w_add);
             let Tokencontract = null;
             let networkId = provider.provider.networkVersion
             if (networkId == 80001)
@@ -137,7 +138,7 @@ const WhiteList = () => {
             catch (e) {
                 console.log("api error : ", e);
             }
-            setLoading2(false)
+            // setLoading2(false)
             toast.success('Transaction successful', {
                 position: "top-center",
                 autoClose: 5000,
@@ -166,6 +167,9 @@ const WhiteList = () => {
                 })
                 :
                 console.log(e)//toast
+        }
+        finally {
+            setLoading2(false)
         }
     }
     function fireToast(type, msg) {
@@ -229,7 +233,10 @@ const WhiteList = () => {
             catch (e) {
                 console.log(e);
             }
-            setLoading2(false)
+            finally {
+
+                setLoading2(false)
+            }
             setFlag(Flag + 1)
         }
         catch (e) {
