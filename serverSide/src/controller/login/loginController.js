@@ -2,7 +2,6 @@ const { login } = require('../../../models')
 const ethers = require('ethers')
 const jwt = require('jsonwebtoken')
 
-const secretKey = 'secretKey'
 
 const getLoginData = async (req, res) => {
     try {
@@ -35,7 +34,6 @@ const verifySignature = async (req, res) => {
     try {
 
         let { signature, message, address } = req.body;
-        console.log("here....");
         let recoveredaddress = ethers.utils.verifyMessage(message, signature);
         if (recoveredaddress.toLowerCase() == address.toLowerCase())
             res.status(200).json({ status: true })
@@ -44,25 +42,24 @@ const verifySignature = async (req, res) => {
             res.status(200).json({ status: false })
     }
     catch (e) {
-        console.log(e);
         res.status(400).json(e)
     }
 }
 
 const generateNewAccessToken = (req, res) => {
-    const { signature } = req.body;
-    const accsessToken = jwt.sign({ signature }, secretKey, { expiresIn: '60s' })
-    res.cookie("accsessToken", accsessToken)
+    const { secretkey, account } = req.body;
+    const accsessToken = jwt.sign({ account }, secretkey, { expiresIn: '3600s' })
+    // res.cookie("accsessToken", accsessToken)
     res.status(200).json({ accsessToken: accsessToken })
+}
 
-
-    // jwt.verify(refreshToken, refKey, (err, decode) => {
-    //     if (err) {
-    //         return res.sendStatus(403);
-    //     }
-
-    // })
-
+const verifyResult = (req, res) => {
+    try {
+        res.status(200).json({ verify: true })
+    }
+    catch (e) {
+        res.statur(400).json({ error: e })
+    }
 }
 
 
@@ -70,5 +67,6 @@ module.exports = {
     getLoginData,
     addLoginData,
     verifySignature,
-    generateNewAccessToken
+    generateNewAccessToken,
+    verifyResult
 }

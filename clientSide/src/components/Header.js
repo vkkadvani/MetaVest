@@ -37,10 +37,8 @@ const HeaderMain = () => {
                 body: JSON.stringify({ address: acc[0] })
             })
             const loginStatus = await checkLoginDetail.json()
-            console.log(loginStatus);
 
             if (loginStatus == null) {
-                console.log("in null part");
                 try {
                     const acc = await window.ethereum.request({ method: "eth_requestAccounts" });
 
@@ -50,7 +48,6 @@ const HeaderMain = () => {
                     //add address and random number as nounce in databse 
                     const createlogin = await fetch("http://localhost:3000/newLogin", {
                         headers: { 'Content-Type': 'application/json ;charset=utf-8' },
-                        // mode: 'no-cors',
                         method: "POST",
                         body: JSON.stringify({ address: acc[0], nounce: randomNumber }),
                     })
@@ -70,15 +67,23 @@ const HeaderMain = () => {
                         method: "POST",
                         body: JSON.stringify({ address: acc[0], signature: signature, message: message }),
                     })
-
-                    //generate jwt token
-                    const accsesstoken = await fetch("http://localhost:3000/jwtauth", {
-                        headers: { 'Content-Type': 'application/json ;charset=utf-8' },
-                        method: "POST",
-                        body: JSON.stringify({ signature: signature })
-                    })
-                    console.log(await accsesstoken.json());
                     const status = await authenticate.json()
+
+                    if (status) {
+
+                        //generate jwt token
+                        const accsesstoken = await fetch("http://localhost:3000/jwtauth", {
+                            headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+                            method: "POST",
+                            body: JSON.stringify({ secretkey: "metavestbest", account: acc[0] })
+                        })
+
+                        const jwt = await accsesstoken.json()
+                        localStorage.setItem("jwt", jwt.accsessToken)
+                    }
+                    else {
+                        console.log("error");
+                    }
 
                 }
                 catch (e) {
@@ -87,41 +92,46 @@ const HeaderMain = () => {
             }
 
             else {
-                console.log("in not null part");
                 try {
-                    console.log(document.cookie
-                        .split('; ')
-                        .find(row => row.startsWith('accsessToken='))
-                        ?.split('=')[1]);
-
-                    const acc = await window.ethereum.request({ method: "eth_requestAccounts" });
-
-                    //get user address and nounce from backend
-                    const userDetail = await fetch("http://localhost:3000/login", {
-                        method: "POST",
+                    const accsessToken = localStorage.getItem("jwt")
+                    const verifyStatus = await fetch("http://localhost:3000/verifyJWT", {
+                        method: 'POST',
                         headers: { 'Content-Type': 'application/json ;charset=utf-8' },
-                        body: JSON.stringify({ address: acc[0] })
-                    })
-                    const userDetailObject = await userDetail.json()
-                    const { address, nounce } = userDetailObject
-                    console.log("new data", address, nounce)
-
-                    //sign message drom frontend using metamask 
-                    const message = JSON.stringify({ address: acc[0], nounce: nounce })
-                    const provider = new ethers.providers.Web3Provider(window.ethereum);
-                    const signer = provider.getSigner();
-                    const signature = await signer.signMessage(message)
-
-                    //authenticate user signature by sending it to backend
-                    const authenticate = await fetch("http://localhost:3000/authenticate", {
-                        headers: { 'Content-Type': 'application/json ;charset=utf-8' },
-                        // mode: 'no-cors',
-                        method: "POST",
-                        body: JSON.stringify({ address: acc[0], signature: signature, message: message }),
+                        body: JSON.stringify({ accsessToken: accsessToken, secretkey: "metavestbest" })
                     })
 
-                    const status = await authenticate.json()
-                    console.log(status);
+                    const verifyResult = await verifyStatus.json()
+
+                    if (!verifyResult) {
+
+                        const acc = await window.ethereum.request({ method: "eth_requestAccounts" });
+
+                        //get user address and nounce from backend
+                        const userDetail = await fetch("http://localhost:3000/login", {
+                            method: "POST",
+                            headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+                            body: JSON.stringify({ address: acc[0] })
+                        })
+                        const userDetailObject = await userDetail.json()
+                        const { address, nounce } = userDetailObject
+                        console.log("new data", address, nounce)
+
+                        //sign message drom frontend using metamask 
+                        const message = JSON.stringify({ address: acc[0], nounce: nounce })
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const signer = provider.getSigner();
+                        const signature = await signer.signMessage(message)
+
+                        //authenticate user signature by sending it to backend
+                        const authenticate = await fetch("http://localhost:3000/authenticate", {
+                            headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+                            // mode: 'no-cors',
+                            method: "POST",
+                            body: JSON.stringify({ address: acc[0], signature: signature, message: message }),
+                        })
+
+                        const status = await authenticate.json()
+                    }
                 }
                 catch (e) {
                     console.log(e)
