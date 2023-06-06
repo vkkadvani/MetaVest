@@ -29,6 +29,7 @@ const HeaderMain = () => {
 
             //db action 
 
+
             //check for address is in table or not ; null or object
             const checkLoginDetail = await fetch("http://localhost:3000/login", {
                 method: "POST",
@@ -70,6 +71,13 @@ const HeaderMain = () => {
                         body: JSON.stringify({ address: acc[0], signature: signature, message: message }),
                     })
 
+                    //generate jwt token
+                    const accsesstoken = await fetch("http://localhost:3000/jwtauth", {
+                        headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+                        method: "POST",
+                        body: JSON.stringify({ signature: signature })
+                    })
+                    console.log(await accsesstoken.json());
                     const status = await authenticate.json()
 
                 }
@@ -81,6 +89,11 @@ const HeaderMain = () => {
             else {
                 console.log("in not null part");
                 try {
+                    console.log(document.cookie
+                        .split('; ')
+                        .find(row => row.startsWith('accsessToken='))
+                        ?.split('=')[1]);
+
                     const acc = await window.ethereum.request({ method: "eth_requestAccounts" });
 
                     //get user address and nounce from backend

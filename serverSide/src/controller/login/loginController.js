@@ -1,5 +1,8 @@
 const { login } = require('../../../models')
 const ethers = require('ethers')
+const jwt = require('jsonwebtoken')
+
+const secretKey = 'secretKey'
 
 const getLoginData = async (req, res) => {
     try {
@@ -45,8 +48,27 @@ const verifySignature = async (req, res) => {
         res.status(400).json(e)
     }
 }
+
+const generateNewAccessToken = (req, res) => {
+    const { signature } = req.body;
+    const accsessToken = jwt.sign({ signature }, secretKey, { expiresIn: '60s' })
+    res.cookie("accsessToken", accsessToken)
+    res.status(200).json({ accsessToken: accsessToken })
+
+
+    // jwt.verify(refreshToken, refKey, (err, decode) => {
+    //     if (err) {
+    //         return res.sendStatus(403);
+    //     }
+
+    // })
+
+}
+
+
 module.exports = {
     getLoginData,
     addLoginData,
-    verifySignature
+    verifySignature,
+    generateNewAccessToken
 }
