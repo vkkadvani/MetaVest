@@ -49,15 +49,15 @@ module.exports = {
       },
       amount: {
         allowNull: false,
-        type: Sequelize.INTEGER
+        type: Sequelize.NUMERIC
       },
       recieveOnInterval: {
         allowNull: false,
-        type: Sequelize.INTEGER
+        type: Sequelize.NUMERIC
       },
       claimed: {
         allowNull: false,
-        type: Sequelize.INTEGER
+        type: Sequelize.NUMERIC
       },
     });
   },

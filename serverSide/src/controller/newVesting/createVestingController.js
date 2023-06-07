@@ -34,6 +34,7 @@ const crateVesting = async (req, res) => {
         res.status(200).json({ message: "Vesting Created successfully." })
     }
     catch (e) {
+        console.log(e);
         res.json(e)
     }
 }

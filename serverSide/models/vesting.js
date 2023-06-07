@@ -61,15 +61,15 @@ module.exports = (sequelize, DataTypes) => {
     },
     amount: {
       allowNull: false,
-      type: DataTypes.INTEGER
+      type: DataTypes.NUMERIC
     },
     recieveOnInterval: {
       allowNull: false,
-      type: DataTypes.INTEGER
+      type: DataTypes.NUMERIC
     },
     claimed: {
       allowNull: false,
-      type: DataTypes.INTEGER
+      type: DataTypes.NUMERIC
     },
   }, {
     sequelize,

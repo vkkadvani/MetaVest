@@ -8,19 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import LandingLock from '../Animation/LandingLock';
 const ethers = require("ethers")
 const ConfirmLock = ({ data }) => {
-    const tokenAddress = data.tokenAddress
-    console.log(tokenAddress);
-    async function getTokenData(tokenAddress) {
 
-        const fetchWhitelist = await fetch("http://localhost:3000/whitelistToken", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json ;charset=utf-8' },
-            body: JSON.stringify({ networkId: "80001", tokenAddress: tokenAddress })
-        })
-        const whiteListData = await fetchWhitelist.json()
-        console.log(whiteListData);
-    }
-    getTokenData();
     console.log(data);
     const { whitemod_flag } = useContext(AppContext)
     const [total_duration, setTotalDuration] = useState('')
@@ -29,6 +17,7 @@ const ConfirmLock = ({ data }) => {
     const [end_time_f, setEndtimeF] = useState('')
     const [slice_period_f, setSlicePeriodF] = useState('')
     const [tnRunning, setTnRunnig] = useState(false)
+    const [tokenData, setTokenData] = useState()
     const navigate = useNavigate();
 
     const style = {
@@ -52,6 +41,7 @@ const ConfirmLock = ({ data }) => {
     }
 
     useEffect(() => {
+
         const duration = calculateDuration(data.Start_timestamp, data.end_timestamp)
         setTotalDuration(duration)
         setStartTimeF(formatTimestamp(data.Start_timestamp))
@@ -106,14 +96,14 @@ const ConfirmLock = ({ data }) => {
             const wallet_add = await provider.send("eth_requestAccounts", []);
             const signer = provider.getSigner();
             const contract = new ethers.Contract(contractAddress, ABI, signer);
-
-            const amount = ((data.amount) * (10 ** data.decimalOfToken)).toString();
+            console.log(data);
+            const amount = ((data.amount) * (10 ** data.decimals)).toString();
             let start = (data.Start_timestamp);
             let duration = (data.end_timestamp - data.Start_timestamp);
             let slicePeriod = data.slice;
             let cliff = data.cliff_timestamp;
             let beneficiaries = data.Beneficiaries.toString();
-            let addressOfToken = data.address_of_token.toString();
+            let addressOfToken = data.tokenAddress.toString();
 
 
 
@@ -131,12 +121,31 @@ const ConfirmLock = ({ data }) => {
                 const approval = await Tcontract.approve(contractAddress, amount)
                 await approval.wait();
             }
-            const lock = await contract.lock(amount, start, duration, slicePeriod, cliff, beneficiaries, addressOfToken);
+            // const lock = await contract.lock(amount, start, duration, slicePeriod, cliff, beneficiaries, addressOfToken);
 
             setTnRunnig(true);
-            await lock.wait();
+            // await lock.wait();
+            const createVesting = await fetch("http://localhost:3000/createVesting", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+                body: JSON.stringify({
+                    beneficiary: beneficiaries,
+                    locked: true,
+                    starttime: start,
+                    cliff: cliff,
+                    slicePeriod: slicePeriod,
+                    endTime: (start + duration),
+                    networkId: "80001",
+                    tokenId: data.tokenId,
+                    amount: amount,
+                    recieveOnInterval: ((slicePeriod * amount) / duration),
+                    claimed: 0
+                })
+            })
+            const whiteListData = await createVesting.json()
+            console.log("Response:", whiteListData);
             setTnRunnig(false);
-            navigate('/currentVesting');
+            // navigate('/currentVesting');
         }
         catch (e) {
             function extractReasonFromErrorMessage(error) {
@@ -216,7 +225,7 @@ const ConfirmLock = ({ data }) => {
                                 <div className={style.input_form_div_left}>
 
                                     <p className={style.input_label}>Token</p>
-                                    <p className={style.data}>{data.nameOfToken}</p>
+                                    <p className={style.data}>{data.tokenName}</p>
                                     <p className={style.input_label}>Address Of Token</p>
                                     <p className={style.data}>{data.tokenAddress}</p>
                                     <p className={style.input_label}>Beneficiaries</p>

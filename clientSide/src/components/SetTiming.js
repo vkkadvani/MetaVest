@@ -6,6 +6,8 @@ import ConfirmLock from './ConfirmLock';
 
 const SetTiming = ({ half_form_send }) => {
     console.log(half_form_send);
+    const tokenAddress = half_form_send.tokenAddress
+    console.log(tokenAddress);
     const contractAddress = '0xf8d318205eD763959Fb79FF55469C6071Fe061a7';
     const { whitemod_flag, setWhitemodflag } = useContext(AppContext)
     const { WalletConnection, setWalletConnection } = useContext(AppContext)
@@ -96,6 +98,22 @@ const SetTiming = ({ half_form_send }) => {
         const start_time = toTimestamp(half_form.start_date + 'T' + half_form.start_time);
         const end_time = toTimestamp(half_form.end_date + 'T' + half_form.end_time);
         const cliff = toTimestamp(half_form.cliff_date + 'T' + half_form.cliff_time);
+
+        async function getTokenData(tokenAddress) {
+
+            const fetchWhitelist = await fetch("http://localhost:3000/whitelistToken", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+                body: JSON.stringify({ networkId: "80001", tokenAddress: tokenAddress })
+            })
+            const whiteListData = await fetchWhitelist.json()
+            // setTokenData(whiteListData)
+            const tokenName = (whiteListData[0].tokenName);
+            const tokenId = whiteListData[0].whitelistId
+            const decimals = whiteListData[0].decimals
+            return { tokenName, tokenId, decimals };
+        }
+        const { tokenName, tokenId, decimals } = await getTokenData(tokenAddress)
         if (validateForm(start_time, end_time, cliff, half_form_send.slice)) {
 
             sethalf_form((prevState) => ({
@@ -103,6 +121,9 @@ const SetTiming = ({ half_form_send }) => {
                 end_timestamp: end_time,
                 Start_timestamp: start_time,
                 cliff_timestamp: cliff,
+                tokenName: tokenName,
+                tokenId: tokenId,
+                decimals: decimals
             }));
             setConfirmPageFlag(true)
         }
