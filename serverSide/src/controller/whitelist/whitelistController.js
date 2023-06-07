@@ -50,10 +50,23 @@ const removeFromWhitelist = async (req, res) => {
     }
 }
 
-
+const getWhitelistToken = async (req, res) => {
+    try {
+        const { networkId, tokenAddress } = req.body;
+        const list = await whitelist.findAll({
+            where: { networkId: networkId, tokenAddress: tokenAddress }
+        })
+        res.json(list)
+    }
+    catch (e) {
+        console.log(e);
+        res.json(e)
+    }
+}
 
 module.exports = {
     addToWhitelist,
     getWhitelist,
-    removeFromWhitelist
+    removeFromWhitelist,
+    getWhitelistToken
 }

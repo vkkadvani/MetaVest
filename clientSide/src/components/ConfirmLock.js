@@ -8,6 +8,20 @@ import 'react-toastify/dist/ReactToastify.css';
 import LandingLock from '../Animation/LandingLock';
 const ethers = require("ethers")
 const ConfirmLock = ({ data }) => {
+    const tokenAddress = data.tokenAddress
+    console.log(tokenAddress);
+    async function getTokenData(tokenAddress) {
+
+        const fetchWhitelist = await fetch("http://localhost:3000/whitelistToken", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+            body: JSON.stringify({ networkId: "80001", tokenAddress: tokenAddress })
+        })
+        const whiteListData = await fetchWhitelist.json()
+        console.log(whiteListData);
+    }
+    getTokenData();
+    console.log(data);
     const { whitemod_flag } = useContext(AppContext)
     const [total_duration, setTotalDuration] = useState('')
     const [start_time_f, setStartTimeF] = useState('')
@@ -94,7 +108,6 @@ const ConfirmLock = ({ data }) => {
             const contract = new ethers.Contract(contractAddress, ABI, signer);
 
             const amount = ((data.amount) * (10 ** data.decimalOfToken)).toString();
-
             let start = (data.Start_timestamp);
             let duration = (data.end_timestamp - data.Start_timestamp);
             let slicePeriod = data.slice;
@@ -205,7 +218,7 @@ const ConfirmLock = ({ data }) => {
                                     <p className={style.input_label}>Token</p>
                                     <p className={style.data}>{data.nameOfToken}</p>
                                     <p className={style.input_label}>Address Of Token</p>
-                                    <p className={style.data}>{data.address_of_token}</p>
+                                    <p className={style.data}>{data.tokenAddress}</p>
                                     <p className={style.input_label}>Beneficiaries</p>
                                     <p className={style.data}>{data.Beneficiaries}</p>
 

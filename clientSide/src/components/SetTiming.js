@@ -5,6 +5,7 @@ import { AppContext } from '../App';
 import ConfirmLock from './ConfirmLock';
 
 const SetTiming = ({ half_form_send }) => {
+    console.log(half_form_send);
     const contractAddress = '0xf8d318205eD763959Fb79FF55469C6071Fe061a7';
     const { whitemod_flag, setWhitemodflag } = useContext(AppContext)
     const { WalletConnection, setWalletConnection } = useContext(AppContext)

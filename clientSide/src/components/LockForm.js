@@ -92,7 +92,6 @@ const LockForm = () => {
                 // const decimalOfToken = await Tokencontract.decimals();
                 // const name = await Tokencontract.name();
 
-                setForm({ ...form, decimalOfToken: whiteListedToken.decimals, nameOfToken: whiteListedToken.tokenName })
                 setPageComponent(true)
             }
             catch (e) {
@@ -113,7 +112,7 @@ const LockForm = () => {
         (!slice_result) ? setSliceError('* Slice Period only contains digit 0-9. It must be greater than 0(Zero)') : setSliceError('')
         const beneficiearies_result = beneficiaries_regex.test(form.Beneficiaries);
         (!beneficiearies_result) ? setBeneficiariesError('*  Enter a valid address of Beneficiaries.') : setBeneficiariesError('')
-        const TokenAddressError = (form.address_of_token == undefined);
+        const TokenAddressError = (form.tokenAddress == undefined);
         (TokenAddressError) ? setAddressTokenError(' * please select token') : setAddressTokenError('');
         if (!amount_result) fireToast('error', 'Please Enter Valid Amount');
         if (!slice_result) fireToast('error', 'Please Enter Valid Slice');
@@ -170,7 +169,9 @@ const LockForm = () => {
                                         <div className={style.input_form_div_left}>
                                             <p className={style.input_label}>Token</p>
                                             <div className={style.input_field_dd}>
-                                                <select className={style.select_dd} onChange={(event) => { setForm({ ...form, address_of_token: event.target.value }) }}>
+                                                <select className={style.select_dd} onChange={(event) => {
+                                                    setForm({ ...form, tokenAddress: event.target.value })
+                                                }}>
                                                     <option>Select Token</option>
                                                     {whiteListedToken
                                                         &&
