@@ -1,9 +1,10 @@
+const { where } = require('sequelize');
 const { whitelist, vesting } = require('../../../models')
 
 const crateVesting = async (req, res) => {
     try {
         console.log("try");
-        const {
+        let {
             beneficiary,
             locked,
             starttime,
@@ -16,7 +17,21 @@ const crateVesting = async (req, res) => {
             recieveOnInterval,
             claimed
         } = req.body;
-
+        let decimal
+        try {
+            const list = await whitelist.findOne({
+                where: { networkId: networkId, whitelistId: tokenId }
+            })
+            const whitelistdata = await list.dataValues
+            decimal = whitelistdata.decimals
+            console.log("yehh...", whitelistdata);
+        }
+        catch (e) {
+            console.log(e);
+            res.json(e)
+        }
+        amount = (amount / (10 ** decimal))
+        recieveOnInterval = ((recieveOnInterval / (10 ** decimal)))
         const Vesting = await vesting.create({
             beneficiary,
             locked,
@@ -42,12 +57,12 @@ const crateVesting = async (req, res) => {
 const getVesting = async (req, res) => {
     try {
 
-        const { chain, vestingId, beneficiary } = req.body;
+        const { networkId, vestingId, beneficiary } = req.body;
 
         let vesting_data = await vesting.findOne({
             where: {
                 vestingId: vestingId,
-                networkId: chain,
+                networkId: networkId,
                 beneficiary: beneficiary
             }
         })
@@ -56,33 +71,61 @@ const getVesting = async (req, res) => {
         res.status(200).json(vesting_data)
     }
     catch (e) {
-        res.json(e)
+        console.log(e);
+        res.status(400).json(e)
     }
 }
 
 const getAllVesting = async (req, res) => {
     try {
 
-        const { chain, beneficiary } = req.body;
+        const { networkId, beneficiary } = req.body;
 
         let vesting_data = await vesting.findAll({
             where: {
-                networkId: chain,
+                networkId: networkId,
                 beneficiary: beneficiary
             }
         })
-        // let token_data = (await vesting_data.getWhitelist()).dataValues
+        // vesting_data.forEach(e => {
+        //     // console.log(e.dataValues);
+        //     let d = e
+        //     console.log((d.getwhitelist()).dataValues);
+        // })
+        // let token_data = (await vesting_data[0].getwhitelist()).dataValues
+        // console.log(token_data);
         // vesting_data = { ...vesting_data.dataValues, token_data }
         res.status(200).json(vesting_data)
     }
     catch (e) {
+        console.log(e);
         res.json(e)
     }
 }
 
+const updateVesting = async (req, res) => {
+    try {
+
+        const { vestingId, claimed, beneficiary, networkId } = req.body;
+
+        const updateVesting = await vesting.update({ claimed: claimed }, {
+            where: {
+                vestingId: vestingId,
+                beneficiary: beneficiary,
+                networkId: networkId
+            }
+        })
+        res.status(200).json("claimed Updated")
+    }
+    catch (e) {
+        console.log(e);
+        res.status(400).json(e)
+    }
+}
 
 module.exports = {
     crateVesting,
     getVesting,
-    getAllVesting
+    getAllVesting,
+    updateVesting
 }

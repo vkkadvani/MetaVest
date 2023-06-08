@@ -68,10 +68,15 @@ const WhiteList = () => {
                 //     }
                 // }
                 //get data from database
+                const networkId = await provider.provider.networkVersion;
                 const fetchWhitelist = await fetch("http://localhost:3000/whitelist", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json ;charset=utf-8' },
-                    body: JSON.stringify({ networkId: "80001" })
+                    body: JSON.stringify({
+                        networkId: networkId,
+                        secretkey: "metavestbest",
+                        accsessToken: localStorage.getItem('jwt')
+                    })
                 })
                 const whiteList = await fetchWhitelist.json()
                 setData(whiteList)
@@ -131,7 +136,9 @@ const WhiteList = () => {
                         tokenName: name,
                         tokenSymbol: symbol,
                         networkId: networkId,
-                        decimals: decimal
+                        decimals: decimal,
+                        secretkey: "metavestbest",
+                        accsessToken: localStorage.getItem('jwt')
                     })
                 })
             }
@@ -221,12 +228,19 @@ const WhiteList = () => {
             setLoading2(true)
             tx.wait()
             console.log("beofre API called : ", w_add);
+            const networkId = await provider.provider.networkVersion;
+
             try {
                 console.log("inside try block");
                 const fetchremoveWhitelist = await fetch("http://localhost:3000/removeWhitelist", {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json ;charset=utf-8' },
-                    body: JSON.stringify({ tokenAddress: w_add, networkId: "80001" })
+                    body: JSON.stringify({
+                        tokenAddress: w_add,
+                        networkId: networkId,
+                        secretkey: "metavestbest",
+                        accsessToken: localStorage.getItem('jwt')
+                    })
                 })
                 console.log(await fetchremoveWhitelist.json());
             }

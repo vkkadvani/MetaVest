@@ -12,6 +12,7 @@ const getLoginData = async (req, res) => {
         res.status(200).json(data)
     }
     catch (e) {
+        console.log("controller error");
         res.status(400).json(e)
     }
 }
@@ -48,7 +49,7 @@ const verifySignature = async (req, res) => {
 
 const generateNewAccessToken = (req, res) => {
     const { secretkey, account } = req.body;
-    const accsessToken = jwt.sign({ account }, secretkey, { expiresIn: '3600s' })
+    const accsessToken = jwt.sign({ account }, secretkey, { expiresIn: '15s' })
     // res.cookie("accsessToken", accsessToken)
     res.status(200).json({ accsessToken: accsessToken })
 }

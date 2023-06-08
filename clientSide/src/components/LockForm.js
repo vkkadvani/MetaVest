@@ -41,7 +41,7 @@ const LockForm = () => {
 
         //dropdown setup data
         async function SetDropdown() {
-            // const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
             // const wallet_add = await provider.send("eth_requestAccounts", []);
             // const signer = provider.getSigner();
             // const contract = new ethers.Contract(contractAddress, ABI, signer);
@@ -61,13 +61,19 @@ const LockForm = () => {
             //     const symbol = await Tcontract.symbol()
             //     whiteList.push({ C_address: tokenContractAddress, C_name: `${name} (${symbol}) - ${tokenContractAddress}` });
             // }
+            const networkId = await provider.provider.networkVersion;
             const fetchWhitelist = await fetch("http://localhost:3000/whitelist", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json ;charset=utf-8' },
-                body: JSON.stringify({ networkId: "80001" })
+                body: JSON.stringify({
+                    networkId: networkId,
+                    secretkey: "metavestbest",
+                    accsessToken: localStorage.getItem('jwt')
+                })
+
             })
             const whiteListData = await fetchWhitelist.json()
-            console.log(whiteListData);
+            // console.log(whiteListData);
             setData(whiteListData)
         }
         SetDropdown()

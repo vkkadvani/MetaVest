@@ -13,6 +13,19 @@ const HeaderMain = () => {
     const [l_value, setLabel] = useState('Connect')
     const [Flag, setFlag] = useState(0);
 
+    (async () => {
+        const accsessToken = localStorage.getItem("jwt")
+        const verifyStatus = await fetch("http://localhost:3000/verifyJWT", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+            body: JSON.stringify({ accsessToken: accsessToken, secretkey: "metavestbest" })
+        })
+
+        const verifyResult = await verifyStatus.json()
+        const verify = verifyResult.verify
+        if (!verify)
+            setLabel('Connect')
+    })();
 
     async function connectWallet() {
         try {
@@ -30,7 +43,7 @@ const HeaderMain = () => {
             //db action 
 
 
-            //check for address is in table or not ; null or object
+            //check for address is in table or not : null or object
             const checkLoginDetail = await fetch("http://localhost:3000/login", {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json ;charset=utf-8' },
@@ -82,17 +95,20 @@ const HeaderMain = () => {
                         localStorage.setItem("jwt", jwt.accsessToken)
                     }
                     else {
+                        //toast
                         console.log("error");
                     }
 
                 }
                 catch (e) {
+                    //toast
                     console.log(e);
                 }
             }
 
             else {
                 try {
+                    //verify jwt
                     const accsessToken = localStorage.getItem("jwt")
                     const verifyStatus = await fetch("http://localhost:3000/verifyJWT", {
                         method: 'POST',
@@ -101,9 +117,10 @@ const HeaderMain = () => {
                     })
 
                     const verifyResult = await verifyStatus.json()
-
-                    if (!verifyResult) {
-
+                    const verify = verifyResult.verify
+                    console.log(verify);
+                    if (!verify) {
+                        console.log("inside false fblock");
                         const acc = await window.ethereum.request({ method: "eth_requestAccounts" });
 
                         //get user address and nounce from backend
@@ -131,6 +148,22 @@ const HeaderMain = () => {
                         })
 
                         const status = await authenticate.json()
+                        if (status) {
+
+                            //generate jwt token
+                            const accsesstoken = await fetch("http://localhost:3000/jwtauth", {
+                                headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+                                method: "POST",
+                                body: JSON.stringify({ secretkey: "metavestbest", account: acc[0] })
+                            })
+
+                            const jwt = await accsesstoken.json()
+                            localStorage.setItem("jwt", jwt.accsessToken)
+                        }
+                        else {
+                            //toast
+                            console.log("error");
+                        }
                     }
                 }
                 catch (e) {
@@ -214,4 +247,4 @@ const HeaderMain = () => {
     )
 }
 
-export default HeaderMain 
+export default HeaderMain

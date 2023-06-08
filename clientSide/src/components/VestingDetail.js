@@ -1,6 +1,6 @@
 // import React, { useState, createContext, useContext, useEffect } from 'react'
 import { useEffect, useState, useContext } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import ABI from '../ABI/ABI.json'
 import { AppContext } from '../App'
 import Popup from './Popup';
@@ -23,7 +23,10 @@ const VestingDetail = () => {
     const [withdrawable, setWithdrawableToken] = useState(0)
     const [Flag, setFlag] = useState(0);
     const [statusOfVesting, setVestingStatus] = useState(false)
-
+    const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const navigate = useNavigate();
+    const dbVestingId = queryParams.get("dbVestingId");
     const style = {
         outer_div: `flex min-h-fit items-center px-24`,
         div_inner: !whitemod_flag ? `h-fit pb-10 w-full bg-grey m-12 rounded-xl  ` : `h-fit pb-10 w-full bg-light_pink m-12 rounded-xl  `,
@@ -49,16 +52,34 @@ const VestingDetail = () => {
         const getVestingData = async () => {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const wallet_add = await provider.send("eth_requestAccounts", []);
-            const signer = provider.getSigner();
-            const contract = new ethers.Contract(contractAddress, ABI, signer);
-            const tempschedule = await contract.vestings(wallet_add[0], vestingId);
+            // const signer = provider.getSigner();
+            // const contract = new ethers.Contract(contractAddress, ABI, signer);
+            // const tempschedule = await contract.vestings(wallet_add[0], vestingId);
+            const getVesting = await fetch("http://localhost:3000/vesting", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+                body: JSON.stringify({
+                    beneficiary: wallet_add[0],
+                    networkId: provider.provider.networkVersion,
+                    vestingId: dbVestingId,
+                    secretkey: "metavestbest",
+                    accsessToken: localStorage.getItem('jwt')
+                })
+            })
+            const vestingData = await getVesting.json()
+            if (vestingData.verify == false) {
+                navigate('/home');
+                fireToast("error", "You need to Re-Authenticate")
+            }
+            // console.log("user:", wallet_add[0], "network:", provider.provider.networkVersion, "vestID :", 15, "Response:", vestingData);
 
 
-            const status = (Number(await contract.getTime()) > (Number(((await contract.vestings(wallet_add[0], vestingId)).params).start))) && (Number(await contract.getTime()) < (Number(await contract.getTime()) + (Number(((await contract.vestings(wallet_add[0], vestingId)).params).duration))))
-            setVestingStatus(status)
-            setVestingData(tempschedule)
-            getDecimal(tempschedule.params.TokenAddress)
-            if (tempschedule.locked) {
+            // const status = (Number(await contract.getTime()) > (Number(((await contract.vestings(wallet_add[0], vestingId)).params).start))) && (Number(await contract.getTime()) < (Number(await contract.getTime()) + (Number(((await contract.vestings(wallet_add[0], vestingId)).params).duration))))
+            setVestingStatus(true)
+
+            setVestingData(vestingData)
+            // getDecimal(tempschedule.params.TokenAddress)
+            if (vestingData.locked) {
                 // setDisable(false)
                 setDisableC(false)
             }
@@ -71,24 +92,25 @@ const VestingDetail = () => {
         getVestingData()
 
     }, [Flag])
-    async function getDecimal(tokenContractAddress) {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const wallet_add = await provider.send("eth_requestAccounts", []);
-        const signer = provider.getSigner();
 
-        let Tokencontract = null;
-        if (provider.provider.networkVersion == 80001)
-            Tokencontract = await fetch(`https://api-testnet.polygonscan.com/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=6Z536YUCYRCIDW1CR53QAS1PYZ41X2FA7K`)
-        else if (provider.provider.networkVersion == 11155111)
-            Tokencontract = await fetch(`https://api-sepolia.etherscan.io/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=WSG13CQU7C9GAHQIRH3J51BPRDYDSC835B`)
-        const respo = await Tokencontract.json()
-        const Tcontract = new ethers.Contract(tokenContractAddress, respo.result, signer);
-        const decimal = await Tcontract.decimals();
-        setDecimal(parseInt(decimal))
+    // async function getDecimal(tokenContractAddress) {
+    //     const provider = new ethers.providers.Web3Provider(window.ethereum);
+    //     const wallet_add = await provider.send("eth_requestAccounts", []);
+    //     const signer = provider.getSigner();
+
+    //     let Tokencontract = null;
+    //     if (provider.provider.networkVersion == 80001)
+    //         Tokencontract = await fetch(`https://api-testnet.polygonscan.com/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=6Z536YUCYRCIDW1CR53QAS1PYZ41X2FA7K`)
+    //     else if (provider.provider.networkVersion == 11155111)
+    //         Tokencontract = await fetch(`https://api-sepolia.etherscan.io/api?module=contract&action=getabi&address=${tokenContractAddress}&apikey=WSG13CQU7C9GAHQIRH3J51BPRDYDSC835B`)
+    //     const respo = await Tokencontract.json()
+    //     const Tcontract = new ethers.Contract(tokenContractAddress, respo.result, signer);
+    //     const decimal = await Tcontract.decimals();
+    //     setDecimal(parseInt(decimal))
 
 
 
-    }
+    // }
     const calculate_withdrawable = async () => {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
@@ -107,12 +129,28 @@ const VestingDetail = () => {
     const withdraw = async () => {
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
-            await provider.send("eth_requestAccounts", []);
+            const wallet_add = await provider.send("eth_requestAccounts", []);
             const signer = provider.getSigner();
             const contract = new ethers.Contract(contractAddress, ABI, signer);
-            const tx = await contract.withdraw(vestingId);
+            // const tx = await contract.withdraw(vestingId);
             setLoading(true)
-            await tx.wait()
+            // await tx.wait()
+            let claimed = ((await contract.vestings(wallet_add[0], vestingId))).claimed
+            console.log(parseInt(claimed));
+            console.log("Update details :", wallet_add[0], provider.provider.networkVersion, 17, parseInt(claimed))
+            const updateVesting = await fetch("http://localhost:3000/updateVesting", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+                body: JSON.stringify({
+                    beneficiary: wallet_add[0],
+                    networkId: provider.provider.networkVersion,
+                    vestingId: dbVestingId,
+                    claimed: parseInt(claimed),
+                    secretkey: "metavestbest",
+                    accsessToken: localStorage.getItem('jwt')
+                })
+            })
+            console.log(updateVesting);
             setLoading(false)
             toast.success('Transaction successful', {
                 position: "top-center",
@@ -146,28 +184,10 @@ const VestingDetail = () => {
         }
 
     }
-    function formatTimestamp(unixTimestamp) {
-        const currentTimestamp = Date.now(); // Current timestamp in milliseconds
-        const targetTimestamp = unixTimestamp * 1000; // Convert Unix timestamp to milliseconds
 
-        const resultTimestamp = currentTimestamp + targetTimestamp;
-        const dateObject = new Date(resultTimestamp);
-
-        const day = String(dateObject.getDate()).padStart(2, '0');
-        const month = String(dateObject.getMonth() + 1).padStart(2, '0');
-        const year = String(dateObject.getFullYear());
-        const hours = String(dateObject.getHours()).padStart(2, '0');
-        const minutes = String(dateObject.getMinutes()).padStart(2, '0');
-        const seconds = String(dateObject.getSeconds()).padStart(2, '0');
-
-        const formattedDate = `${day}-${month}-${year}`;
-        const formattedTime = `${hours}:${minutes}:${seconds}`;
-
-        return `${formattedDate} ${formattedTime}`;
-    }
     function calculateDuration(startTimestamp, endTimestamp) {
-        const start = new Date(startTimestamp * 1000); // Convert to milliseconds
-        const end = new Date(endTimestamp * 1000); // Convert to milliseconds
+        const start = new Date(startTimestamp).getTime(); // Convert to milliseconds
+        const end = new Date(endTimestamp).getTime(); // Convert to milliseconds
 
         const durationInMilliseconds = end - start;
 
@@ -182,20 +202,7 @@ const VestingDetail = () => {
 
         return formattedDuration;
     }
-    function convertUnixTimestampToDateTime(unixTimestamp) {
-        const date = new Date(unixTimestamp * 1000);
 
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
-
-        const dateTimeFormat = `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
-
-        return dateTimeFormat;
-    }
     function convertSeconds(seconds) {
         const days = Math.floor(seconds / (24 * 60 * 60));
         seconds %= 24 * 60 * 60;
@@ -225,6 +232,14 @@ const VestingDetail = () => {
         }
 
         return result.trim();
+    }
+    function convertToDateTime(unixTimestamp) {
+        const date = new Date(unixTimestamp);
+
+        const dateTimeFormat = `${date.getDate()}-${date.getMonth()}-${date.getFullYear()} 
+                                ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+
+        return dateTimeFormat;
     }
 
     window.addEventListener('load', () => {
@@ -294,35 +309,35 @@ const VestingDetail = () => {
                                 <div className={style.input_form_div}>
                                     <div className={style.input_form_div_left}>
                                         <p className={style.input_label}>Amount</p>
-                                        <p className={style.data}>{(parseInt(data.params.amount)) / (10 ** decimal)}</p>
+                                        <p className={style.data}>{(Number(data.amount))}</p>
                                         <p className={style.input_label}>Start Time</p>
-                                        <p className={style.data}>{convertUnixTimestampToDateTime(parseInt(data.params.start))}</p>
+                                        <p className={style.data}>{convertToDateTime(data.starttime)}</p>
                                         <p className={style.input_label}>End Time</p>
-                                        <p className={style.data}>{convertUnixTimestampToDateTime(parseInt(parseInt(data.params.start) + parseInt(data.params.duration)))}</p>
+                                        <p className={style.data}>{convertToDateTime((data.endTime))}</p>
 
 
                                         <p className={style.input_label}>Duration</p>
-                                        <p className={style.data}>{calculateDuration(parseInt(data.params.start), parseInt(parseInt(data.params.start) + parseInt(data.params.duration)))}</p>
+                                        <p className={style.data}>{calculateDuration(data.starttime, data.endTime)}</p>
                                         <p className={style.input_label}>Beneficiaries</p>
-                                        <p className={style.data}>{data.params.beneficiaries}</p>
+                                        <p className={style.data}>{data.beneficiary}</p>
                                         <p className={style.input_label}>Address Of Token</p>
-                                        <p className={style.data}>{data.params.TokenAddress}</p>
+                                        <p className={style.data}>{data.token_data.tokenAddress}</p>
 
 
                                     </div>
                                     <div className={style.input_form_div_left}>
                                         <p className={style.input_label}>Claimed</p>
-                                        <p className={style.data}>{Number(data.claimed) / (10 ** decimal)}</p>
+                                        <p className={style.data}>{Number(data.claimed)}</p>
                                         <p className={style.input_label}>Locked</p>
                                         <p className={style.data}>{statusOfVesting ? "Active" : "Unactive"}</p>
                                         <p className={style.input_label}>Cliff</p>
-                                        <p className={style.data}>{convertUnixTimestampToDateTime(parseInt(parseInt(data.params.start) + parseInt(data.params.cliff)))}</p>
+                                        <p className={style.data}>{convertToDateTime((data.cliff))}</p>
                                         <p className={style.input_label}>Slice Period</p>
-                                        <p className={style.data}>{convertSeconds(parseInt(data.params.slice_period))}</p>
+                                        <p className={style.data}>{convertSeconds(parseInt(data.slicePeriod))}</p>
                                         <p className={style.input_label}>Recive on Interval</p>
-                                        <p className={style.data}>{parseInt(data.params.recive_on_interval) / (10 ** decimal)}</p>
+                                        <p className={style.data}>{Number(data.recieveOnInterval)}</p>
                                         <p className={style.input_label_green}>Withdrawable</p>
-                                        <p className={style.data_green}>{withdrawable / (10 ** decimal)}</p>
+                                        <p className={style.data_green}>{withdrawable / (10 ** data.token_data.decimals)}</p>
                                     </div>
                                 </div>}
 

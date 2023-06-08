@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { AppContext } from '../App';
 import ConfirmLock from './ConfirmLock';
+const ethers = require("ethers")
 
 const SetTiming = ({ half_form_send }) => {
-    console.log(half_form_send);
+    // console.log(half_form_send);
     const tokenAddress = half_form_send.tokenAddress
-    console.log(tokenAddress);
+    // console.log(tokenAddress);
     const contractAddress = '0xf8d318205eD763959Fb79FF55469C6071Fe061a7';
     const { whitemod_flag, setWhitemodflag } = useContext(AppContext)
     const { WalletConnection, setWalletConnection } = useContext(AppContext)
@@ -100,15 +101,21 @@ const SetTiming = ({ half_form_send }) => {
         const cliff = toTimestamp(half_form.cliff_date + 'T' + half_form.cliff_time);
 
         async function getTokenData(tokenAddress) {
-
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
             const fetchWhitelist = await fetch("http://localhost:3000/whitelistToken", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json ;charset=utf-8' },
-                body: JSON.stringify({ networkId: "80001", tokenAddress: tokenAddress })
+                body: JSON.stringify({
+                    networkId: await provider.provider.networkVersion,
+                    tokenAddress: tokenAddress,
+                    secretkey: "metavestbest",
+                    accsessToken: localStorage.getItem('jwt')
+                })
             })
+            // console.log(provider.provider.networkVersion);
             const whiteListData = await fetchWhitelist.json()
             // setTokenData(whiteListData)
-            const tokenName = (whiteListData[0].tokenName);
+            const tokenName = whiteListData[0].tokenName;
             const tokenId = whiteListData[0].whitelistId
             const decimals = whiteListData[0].decimals
             return { tokenName, tokenId, decimals };

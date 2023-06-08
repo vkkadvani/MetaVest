@@ -9,7 +9,7 @@ import LandingLock from '../Animation/LandingLock';
 const ethers = require("ethers")
 const ConfirmLock = ({ data }) => {
 
-    console.log(data);
+    // console.log(data);
     const { whitemod_flag } = useContext(AppContext)
     const [total_duration, setTotalDuration] = useState('')
     const [start_time_f, setStartTimeF] = useState('')
@@ -96,7 +96,7 @@ const ConfirmLock = ({ data }) => {
             const wallet_add = await provider.send("eth_requestAccounts", []);
             const signer = provider.getSigner();
             const contract = new ethers.Contract(contractAddress, ABI, signer);
-            console.log(data);
+            // console.log(data);
             const amount = ((data.amount) * (10 ** data.decimals)).toString();
             let start = (data.Start_timestamp);
             let duration = (data.end_timestamp - data.Start_timestamp);
@@ -125,25 +125,34 @@ const ConfirmLock = ({ data }) => {
 
             setTnRunnig(true);
             // await lock.wait();
+            const currentTime = new Date().getTime();
+            const reqOBJ = {
+                beneficiary: beneficiaries.toLowerCase(),
+                locked: true,
+                starttime: ((start * 1000) + currentTime),
+                cliff: ((cliff * 1000) + currentTime),
+                slicePeriod: slicePeriod,
+                endTime: ((data.end_timestamp * 1000) + currentTime),
+                networkId: provider.provider.networkVersion,
+                tokenId: data.tokenId,
+                amount: amount,
+                recieveOnInterval: ((slicePeriod * amount) / duration),
+                claimed: 0,
+                secretkey: "metavestbest",
+                accsessToken: localStorage.getItem('jwt')
+            }
+            // console.log(reqOBJ);
             const createVesting = await fetch("http://localhost:3000/createVesting", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json ;charset=utf-8' },
-                body: JSON.stringify({
-                    beneficiary: beneficiaries,
-                    locked: true,
-                    starttime: start,
-                    cliff: cliff,
-                    slicePeriod: slicePeriod,
-                    endTime: (start + duration),
-                    networkId: "80001",
-                    tokenId: data.tokenId,
-                    amount: amount,
-                    recieveOnInterval: ((slicePeriod * amount) / duration),
-                    claimed: 0
-                })
+                body: JSON.stringify(reqOBJ)
             })
-            const whiteListData = await createVesting.json()
-            console.log("Response:", whiteListData);
+            const responseData = await createVesting.json()
+            if (responseData.verify == false) {
+                navigate('/newVesting');
+                fireToast("error", "You need to reauthenticate")
+            }
+            // console.log("Response:", whiteListData);
             setTnRunnig(false);
             // navigate('/currentVesting');
         }
