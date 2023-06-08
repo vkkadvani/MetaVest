@@ -49,7 +49,7 @@ const verifySignature = async (req, res) => {
 
 const generateNewAccessToken = (req, res) => {
     const { secretkey, account } = req.body;
-    const accsessToken = jwt.sign({ account }, secretkey, { expiresIn: '15s' })
+    const accsessToken = jwt.sign({ account }, secretkey, { expiresIn: '3600s' })
     // res.cookie("accsessToken", accsessToken)
     res.status(200).json({ accsessToken: accsessToken })
 }

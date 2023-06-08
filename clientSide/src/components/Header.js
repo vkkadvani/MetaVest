@@ -13,19 +13,19 @@ const HeaderMain = () => {
     const [l_value, setLabel] = useState('Connect')
     const [Flag, setFlag] = useState(0);
 
-    (async () => {
-        const accsessToken = localStorage.getItem("jwt")
-        const verifyStatus = await fetch("http://localhost:3000/verifyJWT", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json ;charset=utf-8' },
-            body: JSON.stringify({ accsessToken: accsessToken, secretkey: "metavestbest" })
-        })
+    // (async () => {
+    //     const accsessToken = localStorage.getItem("jwt")
+    //     const verifyStatus = await fetch("http://localhost:3000/verifyJWT", {
+    //         method: 'POST',
+    //         headers: { 'Content-Type': 'application/json ;charset=utf-8' },
+    //         body: JSON.stringify({ accsessToken: accsessToken, secretkey: "metavestbest" })
+    //     })
 
-        const verifyResult = await verifyStatus.json()
-        const verify = verifyResult.verify
-        if (!verify)
-            setLabel('Connect')
-    })();
+    //     const verifyResult = await verifyStatus.json()
+    //     const verify = verifyResult.verify
+    //     if (!verify)
+    //         setLabel('Connect')
+    // })();
 
     async function connectWallet() {
         try {
