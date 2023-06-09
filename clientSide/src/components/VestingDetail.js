@@ -150,7 +150,6 @@ const VestingDetail = () => {
                     accsessToken: localStorage.getItem('jwt')
                 })
             })
-            console.log(updateVesting);
             setLoading(false)
             toast.success('Transaction successful', {
                 position: "top-center",

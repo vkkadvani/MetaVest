@@ -3,7 +3,6 @@ const { whitelist, vesting } = require('../../../models')
 
 const crateVesting = async (req, res) => {
     try {
-        console.log("try");
         let {
             beneficiary,
             locked,
@@ -24,7 +23,6 @@ const crateVesting = async (req, res) => {
             })
             const whitelistdata = await list.dataValues
             decimal = whitelistdata.decimals
-            console.log("yehh...", whitelistdata);
         }
         catch (e) {
             console.log(e);
@@ -45,7 +43,6 @@ const crateVesting = async (req, res) => {
             recieveOnInterval,
             claimed
         })
-        console.log(Vesting);
         res.status(200).json({ message: "Vesting Created successfully." })
     }
     catch (e) {
@@ -115,7 +112,7 @@ const updateVesting = async (req, res) => {
                 networkId: networkId
             }
         })
-        res.status(200).json("claimed Updated")
+        res.status(200).json({ message: "claimed Updated" })
     }
     catch (e) {
         console.log(e);
