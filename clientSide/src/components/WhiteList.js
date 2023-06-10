@@ -80,6 +80,10 @@ const WhiteList = () => {
                     })
                 })
                 const whiteList = await fetchWhitelist.json()
+                if (whiteList.verify == false) {
+                    navigate('/home');
+                    fireToast("error", "You need to Re-Authenticate")
+                }
                 setData(whiteList)
                 setLoading(false)
             }
@@ -129,7 +133,7 @@ const WhiteList = () => {
             //adding to database
             try {
 
-                await fetch('http://localhost:3000/addWhitelist', {
+                const whitelist = await fetch('http://localhost:3000/addWhitelist', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json ;charset=utf-8' },
                     body: JSON.stringify({
@@ -143,6 +147,11 @@ const WhiteList = () => {
                         accsessToken: localStorage.getItem('jwt')
                     })
                 })
+                const alllist = await whitelist.json()
+                if (alllist.verify == false) {
+                    navigate('/home');
+                    fireToast("error", "You need to Re-Authenticate")
+                }
             }
             catch (e) {
                 console.log("api error : ", e);
