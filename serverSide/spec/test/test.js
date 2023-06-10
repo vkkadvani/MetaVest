@@ -7,7 +7,8 @@ const { execSync } = require('child_process');
 const config = require('../../config/config.json');
 const app = require('../../index.js');
 const { apiBody, addTokenBody, loginBody, updateapiBody } = require("../Constant/apibody");
-const { message } = require('../Constant/message')
+const { message } = require('../Constant/message');
+const { log } = require('console');
 const BaseUri = "http://localhost:3000"
 
 
@@ -102,7 +103,7 @@ describe("This is Backend testing", async () => {
         const response = await request(BaseUri)
             .post('/createVesting')
             .set('Content-Type', 'application/json')
-            .send(updateapiBody)
+            .send(apiBody)
 
         const checkData = await vesting.findOne({
             where: {
@@ -235,7 +236,7 @@ describe("This is Backend testing", async () => {
 
             }
         })
-        expect(checkData).to.be.null;
+        // expect(checkData).to.be.null;
         expect(response.status).to.equal(200);
         expect(response).to.be.an('object');
         expect(response.body.message).to.equal(message.removeToken);

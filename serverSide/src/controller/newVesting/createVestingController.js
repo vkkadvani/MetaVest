@@ -103,9 +103,25 @@ const getAllVesting = async (req, res) => {
 const updateVesting = async (req, res) => {
     try {
 
-        const { vestingId, claimed, beneficiary, networkId } = req.body;
-
-        const updateVesting = await vesting.update({ claimed: claimed }, {
+        const { vestingId, claimed, beneficiary, networkId, amount, tokenId } = req.body;
+        let decimal, locked
+        try {
+            const list = await whitelist.findOne({
+                where: { networkId: networkId, whitelistId: tokenId }
+            })
+            const whitelistdata = await list.dataValues
+            decimal = whitelistdata.decimals
+        }
+        catch (e) {
+            console.log(e);
+            res.json(e)
+        }
+        console.log("==========claimed before divide------------------------", claimed);
+        const claimed_d = claimed / (10 ** decimal)
+        if ((amount - claimed_d) == 0)
+            locked = false
+        console.log("=======claimed divided by deciml------------------------", claimed_d);
+        const updateVesting = await vesting.update({ claimed: claimed_d, locked: locked }, {
             where: {
                 vestingId: vestingId,
                 beneficiary: beneficiary,

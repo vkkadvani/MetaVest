@@ -44,7 +44,7 @@ module.exports = {
         references: {
           model: "whitelists",
           key: "whitelistId",
-          onDelete: "CASCADE",
+          onDelete: "DO NOTHING",
         }
       },
       amount: {

@@ -67,6 +67,7 @@ const WhiteList = () => {
 
                 //     }
                 // }
+
                 //get data from database
                 const networkId = await provider.provider.networkVersion;
                 const fetchWhitelist = await fetch("http://localhost:3000/whitelist", {
@@ -137,6 +138,7 @@ const WhiteList = () => {
                         tokenSymbol: symbol,
                         networkId: networkId,
                         decimals: decimal,
+                        active: true,
                         secretkey: "metavestbest",
                         accsessToken: localStorage.getItem('jwt')
                     })
@@ -145,35 +147,19 @@ const WhiteList = () => {
             catch (e) {
                 console.log("api error : ", e);
             }
-            // setLoading2(false)
-            toast.success('Transaction successful', {
-                position: "top-center",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: whitemod_flag ? "light" : "dark",
-            })
+            finally {
+                setLoading2(false)
+            }
+            fireToast("success", 'Transaction successful')
             setFlag(Flag + 1)
 
         }
         catch (e) {
             ((e.toString()).includes('user rejected transaction'))
                 ?
-                toast.error('User Reject Transaction', {
-                    position: "top-center",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: whitemod_flag ? "light" : "dark",
-                })
+                fireToast('error', 'User Reject Transaction')
                 :
-                console.log(e)//toast
+                fireToast('error', 'Unhandeled error')
         }
         finally {
             setLoading2(false)
@@ -227,11 +213,9 @@ const WhiteList = () => {
             const tx = await contract.removeWhitelist(w_add)
             setLoading2(true)
             tx.wait()
-            console.log("beofre API called : ", w_add);
             const networkId = await provider.provider.networkVersion;
 
             try {
-                console.log("inside try block");
                 const fetchremoveWhitelist = await fetch("http://localhost:3000/removeWhitelist", {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json ;charset=utf-8' },
@@ -248,13 +232,15 @@ const WhiteList = () => {
                 console.log(e);
             }
             finally {
-
                 setLoading2(false)
             }
             setFlag(Flag + 1)
         }
         catch (e) {
             fireToast('error', e);
+        }
+        finally {
+            setLoading2(false)
         }
     }
 

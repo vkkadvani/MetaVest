@@ -46,7 +46,8 @@ const addTokenBody = {
     networkId: "80001",
     decimals: 18,
     secretkey: "metavestbest",
-    accsessToken: token
+    accsessToken: token,
+    active: true
 }
 const loginBody = {
     address: "0xC9399199f40686cfacF7Ae7555Ef0DEfa0487Ebe",

@@ -3,9 +3,9 @@ const { whitelist } = require('../../../models')
 
 const getWhitelist = async (req, res) => {
     try {
-        const networkId = req.body.networkId;
+        const { networkId, active } = req.body;
         const list = await whitelist.findAll({
-            where: { networkId: networkId }
+            where: { networkId: networkId, active: true }
         })
         res.status(200).json(list)
     }
@@ -16,13 +16,14 @@ const getWhitelist = async (req, res) => {
 }
 const addToWhitelist = async (req, res) => {
     try {
-        const { tokenAddress, tokenName, tokenSymbol, networkId, decimals } = req.body;
+        const { tokenAddress, tokenName, tokenSymbol, networkId, decimals, active } = req.body;
         const list = await whitelist.create({
             tokenAddress,
             tokenName,
             tokenSymbol,
             networkId,
-            decimals
+            decimals,
+            active
         });
 
         res.status(200).json({ message: "Token added to whitelist." })
@@ -37,7 +38,7 @@ const removeFromWhitelist = async (req, res) => {
     try {
         const { tokenAddress, networkId } = req.body;
         console.log(tokenAddress, networkId);
-        const list = await whitelist.destroy({
+        const list = await whitelist.update({ active: false }, {
             where: { tokenAddress: tokenAddress, networkId: networkId }
         })
         console.log(list)

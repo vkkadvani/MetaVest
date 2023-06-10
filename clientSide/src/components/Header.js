@@ -50,7 +50,8 @@ const HeaderMain = () => {
                 body: JSON.stringify({ address: acc[0] })
             })
             const loginStatus = await checkLoginDetail.json()
-
+            console.log("this is loginStatus", checkLoginDetail.status);
+            console.log("login status ", loginStatus == null);
             if (loginStatus == null) {
                 try {
                     const acc = await window.ethereum.request({ method: "eth_requestAccounts" });
@@ -192,6 +193,7 @@ const HeaderMain = () => {
             setFlag(Flag + 1)
             setWalletConnection(false)
             localStorage.setItem("MetamaskConnection", "false")
+            localStorage.setItem('jwt', '')
 
         }
         else {

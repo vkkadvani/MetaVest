@@ -121,10 +121,10 @@ const ConfirmLock = ({ data }) => {
                 const approval = await Tcontract.approve(contractAddress, amount)
                 await approval.wait();
             }
-            // const lock = await contract.lock(amount, start, duration, slicePeriod, cliff, beneficiaries, addressOfToken);
+            const lock = await contract.lock(amount, start, duration, slicePeriod, cliff, beneficiaries, addressOfToken);
 
             setTnRunnig(true);
-            // await lock.wait();
+            await lock.wait();
             const currentTime = new Date().getTime();
             const reqOBJ = {
                 beneficiary: beneficiaries.toLowerCase(),
@@ -154,7 +154,7 @@ const ConfirmLock = ({ data }) => {
             }
             // console.log("Response:", whiteListData);
             setTnRunnig(false);
-            // navigate('/currentVesting');
+            navigate('/currentVesting');
         }
         catch (e) {
             function extractReasonFromErrorMessage(error) {
