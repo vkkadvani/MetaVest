@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import LandingLock from '../Animation/LandingLock'
 import { fireEvent } from '@testing-library/react'
+import { useNavigate } from 'react-router-dom'
 const ethers = require("ethers")
 
 const WhiteList = () => {
@@ -20,7 +21,7 @@ const WhiteList = () => {
     const [loading, setLoading] = useState(false)
     const [loading2, setLoading2] = useState(false)
     const [w_add, setFormData] = useState()
-
+    const navigate = useNavigate()
     const style = {
         outer_div: `flex min-h-fit items-center px-24`,
         div_inner: !whitemod_flag ? `h-fit pb-6  w-full bg-grey m-12 rounded-xl` : `h-fit pb-6  w-full bg-light_pink m-12 rounded-xl`,
